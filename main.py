@@ -15,8 +15,10 @@ class Settings:
     def __getitem__(self, item):
         return self.settings[item]
 
+
 class Window(Container):
     pass
+
 
 class SearchBar(Static):
 
@@ -24,16 +26,26 @@ class SearchBar(Static):
         yield
 
 
+class SearchResult(Static):
+    CSS_PATH = 'SearchResult.css'
+
+    def __init__(self, titel: str,*args, **kwargs):
+        self.titel: str = titel
+        super().__init__(args, kwargs)
+
+    def compose(self) -> ComposeResult:
+        yield Container(Static(self.titel))
+
+
 class MusicPlayer(App):
     BINDINGS = [("q", "quit", "Close the app")]
 
     def compose(self) -> ComposeResult:
-        self.settings = Settings('settings.json') # noqa
-
+        self.settings = Settings('settings.json')  # noqa
         yield Footer()
         yield Input(placeholder='🔍 Search... ', id='search')
         yield Content(Container(Window(Static(id='actual_content')), id='results'),
-        id="results-container")
+                      id="results-container")
 
     async def on_input_submitted(self, message: Input.Changed):
         if message.value:
@@ -42,8 +54,13 @@ class MusicPlayer(App):
     def fetch_result(self, keywords: str):
         search_result = YoutubeSearch(keywords, max_results=self.settings['max_results']).to_json()
         from pprint import pprint
-        pprint(search_result)
-        self.query_one('#actual_content', Static).update((JSON(str(search_result))))
+        print(search_result)
+        videos = search_result['videos']
+        print(type(videos))
+        video_one = videos[0]
+        print(type(video_one))
+        titel = video_one['title']
+        self.query_one('#actual_content', Static).mount(SearchResult(titel))
 
 
 if __name__ == "__main__":
