@@ -52,15 +52,12 @@ class MusicPlayer(App):
             self.fetch_result(message.value)
 
     def fetch_result(self, keywords: str):
-        search_result = YoutubeSearch(keywords, max_results=self.settings['max_results']).to_json()
+        print(type(self.settings))
+        search_result = YoutubeSearch(keywords, max_results=self.settings['max_results']).to_dict()
         from pprint import pprint
-        print(search_result)
-        videos = search_result['videos']
-        print(type(videos))
-        video_one = videos[0]
-        print(type(video_one))
+        video_one = search_result[0]
         titel = video_one['title']
-        self.query_one('#actual_content', Static).mount(SearchResult(titel))
+        self.query_one('#actual_content', Static).mount(SearchResult(titel, id=f'{video_one["id"]}result'))
 
 
 if __name__ == "__main__":
