@@ -1,10 +1,41 @@
 import json
 
-from textual.app import App, ComposeResult
-from textual.containers import Container, Content
-from textual.widgets import Footer, Static, Input
-from rich.json import JSON
+from textual.app import App, ComposeResult, RenderableType, events
+from textual.containers import Container, Widget, Horizontal
+from textual.widgets import Footer, Static, Input, Button, Header
 from youtube_search import YoutubeSearch
+import vlc
+import yt_dlp
+from rich.syntax import Syntax
+
+
+def sanitize_video_id(video_id):
+    video_id = ''.join(c if c.isalnum() or c in '_-' else '_' for c in video_id)
+    if video_id[0].isdigit():
+        video_id = '_' + video_id
+    return video_id
+
+
+def unsanitize_video_id(component_id):
+    if component_id[0] == '_':
+        component_id = component_id[1:]
+    return component_id.replace('_', '')
+
+
+def get_streaming_url(id: str):
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        url = f'https://www.youtube.de/watch?v={id}'
+        info = ydl.extract_info(url, download=False)
+        return info.get('url', None)
 
 
 class Settings:
@@ -16,36 +47,65 @@ class Settings:
         return self.settings[item]
 
 
-class Window(Container):
-    pass
+class ControlBar(Widget):
 
-
-class SearchBar(Static):
+    def __init__(self, *children: Widget,
+                 name: str | None = None,
+                 id: str | None = None,
+                 classes: str | None = None):
+        super().__init__(*children, name=name, id=id, classes=classes)
 
     def compose(self) -> ComposeResult:
-        yield
+        yield Container(Horizontal(Button('⏮️'), Button('Pause'), Button('⏭️'),
+                                   id='controlbar_wid'), id='controlbar')
 
 
 class SearchResult(Static):
-    CSS_PATH = 'SearchResult.css'
+    def __init__(
+            self,
+            renderable: RenderableType = "",
+            titel: str = '',
+            vid_id: str = '',
+            expand: bool = False,
+            shrink: bool = False,
+            markup: bool = True,
+            name: str | None = None,
+            id: str | None = None,
+            classes: str | None = None,
+    ):
+        super().__init__(renderable, expand=expand, shrink=shrink, markup=markup,
+                         name=name,
+                         id=id, classes=classes)
+        self.titel = titel
+        self.vid_id = vid_id
+        self.sanitized_id = sanitize_video_id(vid_id)
 
-    def __init__(self, titel: str,*args, **kwargs):
-        self.titel: str = titel
-        super().__init__(args, kwargs)
+    def on_button_pressed(self, event: Button.Pressed):
+        if event.button.id == 'play':
+            instance = vlc.Instance()
+            player = instance.media_player_new()
+            media = instance.media_new(get_streaming_url(self.vid_id))
+
+            player.set_media(media)
+            player.play()
 
     def compose(self) -> ComposeResult:
-        yield Container(Static(self.titel))
+        yield Static(self.titel)
+        yield Button('Play', id='play')
 
 
 class MusicPlayer(App):
     BINDINGS = [("q", "quit", "Close the app")]
 
+    CSS_PATH = 'MusicPlayer.css'
+
     def compose(self) -> ComposeResult:
         self.settings = Settings('settings.json')  # noqa
-        yield Footer()
+        yield Header()
         yield Input(placeholder='🔍 Search... ', id='search')
-        yield Content(Container(Window(Static(id='actual_content')), id='results'),
-                      id="results-container")
+        yield Container(id='actual_content')
+        yield ControlBar()
+        yield Footer()
 
     async def on_input_submitted(self, message: Input.Changed):
         if message.value:
@@ -54,12 +114,26 @@ class MusicPlayer(App):
     def fetch_result(self, keywords: str):
         print(type(self.settings))
         search_result = YoutubeSearch(keywords, max_results=self.settings['max_results']).to_dict()
-        from pprint import pprint
-        video_one = search_result[0]
-        titel = video_one['title']
-        self.query_one('#actual_content', Static).mount(SearchResult(titel, id=f'{video_one["id"]}result'))
+
+        #  self.query_one('#actual_content', Container).remove()
+        #  self.mount(Container(id='actual_content'))
+
+        for result in search_result:
+            title = result['title']
+            vid_id = result['id']
+            self.query_one('#actual_content', Container).mount(SearchResult(titel=title,
+                                                                            vid_id=vid_id,
+                                                                            id=sanitize_video_id(
+                                                                                vid_id)))
 
 
+'''
+    instance = vlc.Instance()
+    player = instance.media_player_new()
+    media = instance.media_new(stream_url)
+    player.set_media(media)
+    player.play()
+'''
 if __name__ == "__main__":
     app = MusicPlayer()
     app.run()

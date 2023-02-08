@@ -1,0 +1,18 @@
+Screen {
+    align: right top;
+    height: 10;
+}
+
+#controlbar {
+    height: 3;
+    dock: bottom;
+}
+
+#controlbar_wid {
+    content-align: center middle;
+}
+
+#actual_content {
+    height: 85%;
+    margin-bottom: 0;
+}
