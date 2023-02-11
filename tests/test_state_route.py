@@ -11,7 +11,8 @@ class TestStateRoute(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         env = os.environ.copy()
-        env['PATH'] = env['VIRTUAL_ENV'] + '/Scripts/' + env['PATH']
+        if env.get('VIRTUAL_ENV') is not None:
+            env['PATH'] = env['VIRTUAL_ENV'] + '/Scripts/' + env['PATH']
         cls.api_server = subprocess.Popen(
             ["waitress-serve", '--port', '8000', "vlc_controller:api"],
             env=env,

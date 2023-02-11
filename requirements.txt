@@ -24,3 +24,4 @@ yarl==1.8.2
 youtube-search==2.1.2
 zipp==3.11.0
 waitress
+Flask~=2.2.2
