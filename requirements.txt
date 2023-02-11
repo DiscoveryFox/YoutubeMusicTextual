@@ -19,9 +19,8 @@ Pygments==2.14.0
 requests==2.28.2
 rich==13.2.0
 textual==0.10.1
-textual-inputs==0.2.6
 urllib3==1.26.14
-windows-curses==2.3.1
 yarl==1.8.2
 youtube-search==2.1.2
 zipp==3.11.0
+waitress
