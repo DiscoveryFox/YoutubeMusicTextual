@@ -31,9 +31,6 @@ jobs:
     - name: Set up vlc
       run: |
         sudo sudo apt-get install -y vlc  
-    - name: Test for waitress
-      run: |
-        waitress-serve --port 8000 vlc_controller:api
     - name: Test
       run: |
         python -m unittest discover tests
