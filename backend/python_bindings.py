@@ -1,24 +1,7 @@
 import urllib.parse
-
 import requests
-from typing import Literal
 
-'''
-state
-pause
-play
-add_media
-get_queue
-clear_queue
-stop
-next
-set_rate
-skip
-get_time
-set_volume
-get_volume
 
-'''
 class BackendConnector:
     def __init__(self,
                  base_url: str = 'http://localhost',
@@ -82,5 +65,3 @@ class BackendConnector:
 
     def set_rate(self, rate: float):
         self.session.get(f'{self.backend_url}/set_rate/{rate}')
-
-
