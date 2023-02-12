@@ -7,6 +7,7 @@ from youtube_search import YoutubeSearch
 import vlc
 import yt_dlp
 from rich.syntax import Syntax
+import backend.python_bindings as backend
 
 
 def sanitize_video_id(video_id):
@@ -47,19 +48,6 @@ class Settings:
         return self.settings[item]
 
 
-class ControlBar(Widget):
-
-    def __init__(self, *children: Widget,
-                 name: str | None = None,
-                 id: str | None = None,
-                 classes: str | None = None):
-        super().__init__(*children, name=name, id=id, classes=classes)
-
-    def compose(self) -> ComposeResult:
-        yield Container(Horizontal(Button('⏮️'), Button('Pause'), Button('⏭️'),
-                                   id='controlbar_wid'), id='controlbar')
-
-
 class SearchResult(Static):
     def __init__(
             self,
@@ -95,7 +83,11 @@ class SearchResult(Static):
 
 
 class MusicPlayer(App):
-    BINDINGS = [("q", "quit", "Close the app")]
+    BINDINGS = [
+        ("q", "quit", "Close the app"),
+        ('b', 'reverse_skip', '⏮️'),
+        ('f', 'forward_skip', '⏭️')
+    ]
 
     CSS_PATH = 'MusicPlayer.css'
 
@@ -104,7 +96,6 @@ class MusicPlayer(App):
         yield Header()
         yield Input(placeholder='🔍 Search... ', id='search')
         yield Container(id='actual_content')
-        yield ControlBar()
         yield Footer()
 
     async def on_input_submitted(self, message: Input.Changed):
@@ -125,6 +116,12 @@ class MusicPlayer(App):
                                                                             vid_id=vid_id,
                                                                             id=sanitize_video_id(
                                                                                 vid_id)))
+
+    def action_forward_skip(self):
+        ...
+
+    def action_reverse_skip(self):
+        ...
 
 
 '''

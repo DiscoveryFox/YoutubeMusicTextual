@@ -1,14 +1,8 @@
 Screen {
     align: right top;
-    height: 10;
 }
 
-#controlbar {
-    height: 3;
-    dock: bottom;
-}
-
-#controlbar_wid {
+SearchResult {
     content-align: center middle;
 }
 
