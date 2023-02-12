@@ -24,7 +24,7 @@ class TestPlayRoute(unittest.TestCase):
 
     def test_play_route_with_media(self):
         media = 'https://file-examples.com/storage/fe863385e163e3b0f92dc53/2017/11/file_example_MP3_700KB.mp3'
-        response = requests.get(f'http://localhost:8000/play?media={urllib.parse.quote(media)}')
+        response = requests.get(f'http://localhost:8000/play?url={urllib.parse.quote(media)}')
         self.assertEqual(response.status_code, 200)
 
 

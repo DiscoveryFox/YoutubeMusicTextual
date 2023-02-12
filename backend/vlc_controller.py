@@ -36,11 +36,11 @@ def pause():
     return flask.Response(status=200)
 
 
-@api.route('/play/')
+@api.route('/play')
 def play():
-    media = flask.request.args.get('media')
-    if media:
-        decoded_media_url = urllib.parse.unquote(media)
+    url = flask.request.args.get('url')
+    if url:
+        decoded_media_url = urllib.parse.unquote(url)
         new_media: vlc.Media = instance.media_new(decoded_media_url)
         player.set_media(new_media)
     else:
@@ -54,7 +54,7 @@ def add_media():
     url: str | None = flask.request.args.get('url')
     if url is None:
         return flask.Response(status=404)
-    player_queue.put(instance.media_new(url))
+    player_queue.put(instance.media_new(urllib.parse.unquote(url)))
     return flask.Response(status=200)
 
 
@@ -81,6 +81,33 @@ def stop():
 def next():
     player.stop()
     player.set_media(instance.media_new(player_queue.get()))
+
+
+@api.route('/rate/<float:rate>')
+def set_rate(rate: float):
+    player.set_rate(rate)
+
+
+@api.route('/skip/<int:skip_time>')
+def skip(skip_time: int):
+    player.set_time(player.get_time() + skip_time * 1000)
+    return flask.Response(status=200)
+
+
+@api.route('/get_time')
+def get_time():
+    return str(player.get_time() / 1000), 200
+
+
+@api.route('/set_volume/<int:volume>')
+def set_volume(volume: int):
+    player.audio_set_volume(volume)
+    return flask.Response(status=200)
+
+
+@api.route('/get_volume')
+def get_volume():
+    return str(player.audio_get_volume()), 200
 
 
 if __name__ == '__main__':
